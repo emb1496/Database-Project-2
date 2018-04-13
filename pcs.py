@@ -71,11 +71,10 @@ def product_new():
 @app.route('/product/edit/<id>', methods=['GET', 'POST'])
 def product_edit(id):
     if request.method == 'GET':
-        product = get_product(int(id))
+        product = get_product(id)
         return render_template('products/edit.html', product=product)
     else:
         edit = request.form.copy()
-        edit['id'] = int(edit['id'])
         edit['price'] = float(edit['price'])
         upsert_product(edit)
         return redirect("/product/", code=302)    
@@ -83,10 +82,10 @@ def product_edit(id):
 @app.route('/product/delete/<id>', methods=['GET', 'POST'])
 def product_delete(id):
     if request.method == 'GET':
-        product = get_product(int(id))
+        product = get_product(id)
         return render_template('products/delete.html', product=product)
     else:
-        delete_product(int(id))
+        delete_product(id)
         return redirect("/product/", code=302)    
 #########################################################################
 

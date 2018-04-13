@@ -47,11 +47,6 @@ def _upsert_by_id(things, thing):
         thing['id'] = len(things)
         things.append(thing)
 
-def _delete_by_id(things, id):
-    index = [i for i, c in enumerate(things) if c['id'] == id]
-    if ( len(index) > 0 ) :
-        del things[index[0]]
-
 def connect_to_db(conn_str):
     global products
     global customers
@@ -95,17 +90,22 @@ def delete_customer(id):
 def get_products():
 	allProducts = products.find({})
 	for product in allProducts:
+		product['id'] = str(product['_id'])
 		yield product
 
 def get_product(id):
-    return _find_by_id(products, id)
+	product = products.find_one({'_id':ObjectId(id)})
+	return product
 
 def upsert_product(product):
-    _upsert_by_id(products, product)
+	if 'id' not in product.keys():
+		products.insert_one(product)
+	else:
+		products.update_one({'_id':ObjectId(product['id'])}, {'$set':{'name':product['name'],'price':product['price']}})
 
 def delete_product(id):
-    _delete_by_id(products, id)
-
+	products.delete_one({'_id':ObjectId(id)})
+	
 def get_orders():
     for order in orders:
         order['product'] = _find_by_id(products, order['productId'])
