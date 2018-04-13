@@ -1,3 +1,4 @@
+#Elliott Barinberg, Joshua Long, Brendan Brence
 import pymongo
 from pymongo import MongoClient
 import configparser
