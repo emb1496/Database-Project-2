@@ -1,3 +1,6 @@
+import pymongo
+from pymongo import MongoClient
+import configparser
 ################################################################################
 #  REMOVE THESE LISTS, THEY ARE HERE AS MOCK DATA ONLY.
 customers = list()
@@ -18,6 +21,10 @@ orders.append({'id':3, 'customerId': 1, 'productId':0, 'date':"2011-03-30"})
 orders.append({'id':4, 'customerId': 0, 'productId':1, 'date':"2017-09-01"})
 orders.append({'id':5, 'customerId': 1, 'productId':2, 'date':"2017-12-17"})
 
+#products = None
+#customers = None
+#orders = None
+    
 
 ################################################################################
 # The following three functions are only for mocking data - they should be removed,
@@ -43,14 +50,27 @@ def _delete_by_id(things, id):
     if ( len(index) > 0 ) :
         del things[index[0]]
 
+def connect_to_db(conn_str):
+    global products
+    global customers
+    global orders
+    client = MongoClient(conn_str)
+    products = client.cmps364.products
+    customers = client.cmps364.customers
+    orders = client.cmps364.orders
+    return client
 
 # The following functions are REQUIRED - you should REPLACE their implementation
 # with the appropriate code to interact with your Mongo database.
 def initialize():
+	config = configparser.ConfigParser()
+	config.read('config.ini')
+	connection_string = config['database']['mongo_connection']
+	conn = connect_to_db(connection_string)
+
     # this function will get called once, when the application starts.
     # this would be a good place to initalize your connection!
     # You might also want to connect to redis...
-    print('Nothing to do here...')
 
 def get_customers():
     return customers
