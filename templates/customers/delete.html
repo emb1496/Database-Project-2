@@ -5,7 +5,7 @@
         <p> Do you really want to delete {{customer.firstName}} {{customer.lastName}}?</p>
     </div>
     <div class="panel-body">
-        <form action="/customer/delete/{{customer.id}}" method="post">
+        <form action="/customer/delete/{{customer._id}}" method="post">
             <button class="btn btn-primary" type="submit">Delete</button><a class="btn btn-default" style="margin-left:1em" href="/customer">Cancel</a>
         </form>
     </div>

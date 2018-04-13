@@ -2,29 +2,30 @@
 import pymongo
 from pymongo import MongoClient
 import configparser
+from bson import ObjectId
 ################################################################################
 #  REMOVE THESE LISTS, THEY ARE HERE AS MOCK DATA ONLY.
-customers = list()
-customers.append({'id': 0, 'firstName': "Kasandra", 'lastName': "Cryer", 'street':"884 Meadow Lane", 'city':"Bardstown", 'state':"KY", 'zip':  "4004"})
-customers.append({'id': 1, 'firstName': "Ferne", 'lastName': "Linebarger", 'street':"172 Academy Street", 'city':"Morton Grove", 'state':"IL", 'zip':  "60053"})
-customers.append({'id': 2, 'firstName': "Britany", 'lastName': "Manges", 'street':"144 Fawn Court", 'city':"Antioch", 'state':"TN", 'zip':  "37013"})
+#customers = list()
+#customers.append({'id': 0, 'firstName': "Kasandra", 'lastName': "Cryer", 'street':"884 Meadow Lane", 'city':"Bardstown", 'state':"KY", 'zip':  "4004"})
+#customers.append({'id': 1, 'firstName': "Ferne", 'lastName': "Linebarger", 'street':"172 Academy Street", 'city':"Morton Grove", 'state':"IL", 'zip':  "60053"})
+#customers.append({'id': 2, 'firstName': "Britany", 'lastName': "Manges", 'street':"144 Fawn Court", 'city':"Antioch", 'state':"TN", 'zip':  "37013"})
 
-products = list()
-products.append({'id':0, 'name': "Product A", 'price': 5})
-products.append({'id':1, 'name': "Product B", 'price': 10})
-products.append({'id':2, 'name': "Product C", 'price': 2.5})
+#products = list()
+#products.append({'id':0, 'name': "Product A", 'price': 5})
+#products.append({'id':1, 'name': "Product B", 'price': 10})
+#products.append({'id':2, 'name': "Product C", 'price': 2.5})
 
-orders = list()
-orders.append({'id':0, 'customerId': 0, 'productId':0, 'date':"2017-04-12"})
-orders.append({'id':1, 'customerId': 2, 'productId':1, 'date':"2015-08-13"})
-orders.append({'id':2, 'customerId': 0, 'productId':2, 'date':"2019-10-18"})
-orders.append({'id':3, 'customerId': 1, 'productId':0, 'date':"2011-03-30"})
-orders.append({'id':4, 'customerId': 0, 'productId':1, 'date':"2017-09-01"})
-orders.append({'id':5, 'customerId': 1, 'productId':2, 'date':"2017-12-17"})
+#orders = list()
+#orders.append({'id':0, 'customerId': 0, 'productId':0, 'date':"2017-04-12"})
+#orders.append({'id':1, 'customerId': 2, 'productId':1, 'date':"2015-08-13"})
+#orders.append({'id':2, 'customerId': 0, 'productId':2, 'date':"2019-10-18"})
+#orders.append({'id':3, 'customerId': 1, 'productId':0, 'date':"2011-03-30"})
+#orders.append({'id':4, 'customerId': 0, 'productId':1, 'date':"2017-09-01"})
+#orders.append({'id':5, 'customerId': 1, 'productId':2, 'date':"2017-12-17"})
 
-#products = None
-#customers = None
-#orders = None
+products = None
+customers = None
+orders = None
     
 
 ################################################################################
@@ -68,25 +69,33 @@ def initialize():
 	config.read('config.ini')
 	connection_string = config['database']['mongo_connection']
 	conn = connect_to_db(connection_string)
-
     # this function will get called once, when the application starts.
     # this would be a good place to initalize your connection!
     # You might also want to connect to redis...
 
 def get_customers():
-    return customers
+	allCustomers = customers.find({})
+	for customer in allCustomers:
+		customer['id'] = str(customer['_id'])
+		yield customer
 
 def get_customer(id):
-    return _find_by_id(customers, id)
+	customer = customers.find_one({'_id':ObjectId(id)})
+	return customer
 
 def upsert_customer(customer):
-    _upsert_by_id(customers, customer)
+	if 'id' not in customer.keys():
+		customers.insert_one(customer)
+	else:
+		customers.update_one({'_id':ObjectId(customer['id'])}, {'$set':{'firstName':customer['firstName'],'lastName':customer['lastName'],'street':customer['street'],'city':customer['city'],'state':customer['state'],'zip':customer['zip']}})
 
 def delete_customer(id):
-    _delete_by_id(customers, id)
+	customers.delete_one({'_id':ObjectId(id)})
     
 def get_products():
-    return products
+	allProducts = products.find({})
+	for product in allProducts:
+		yield product
 
 def get_product(id):
     return _find_by_id(products, id)

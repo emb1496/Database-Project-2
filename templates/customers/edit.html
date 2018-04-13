@@ -1,11 +1,11 @@
 {% extends "layout.html" %} {% block content %}
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h1>New Customer</h1>
+        <h1>Edit Customer</h1>
     </div>
     <div class="panel-body">
-        <form action="/customer/edit/{{customer.id}}" method="post">
-            <input name="id" type="hidden" value='{{customer.id}}' />
+        <form action="/customer/edit/{{customer._id}}" method="post">
+            <input name="id" type="hidden" value='{{customer._id}}' />
             <div class="form-group">
                 <input class="form-control" name="firstName" type="text" placeholder="First name" value='{{customer.firstName}}' />
             </div>

@@ -28,22 +28,21 @@ def customer_new():
 @app.route('/customer/edit/<id>', methods=['GET', 'POST'])
 def customer_edit(id):
     if request.method == 'GET':
-        customer = get_customer(int(id))
+        customer = get_customer(id)
         return render_template('customers/edit.html', customer=customer)
     else:
         edit = request.form.copy()
-        edit['id'] = int(edit['id'])
         upsert_customer(edit)
         return redirect("/customer/", code=302)    
 
 @app.route('/customer/delete/<id>', methods=['GET', 'POST'])
 def customer_delete(id):
     if request.method == 'GET':
-        customer = get_customer(int(id))
+        customer = get_customer(id)
         return render_template('customers/delete.html', customer=customer)
     else:
-        delete_customer(int(id))
-        return redirect("/customer/", code=302)    
+        delete_customer(id)
+        return redirect("/customer/", code=302)
 
 @app.route('/customer/report/<id>', methods=['GET'])
 def get_customer_report(id):
