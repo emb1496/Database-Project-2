@@ -103,8 +103,6 @@ def order_new():
         return render_template('orders/new.html', customers=get_customers(), products=get_products())
     else:
         n = request.form.copy()
-        n['customerId'] = int(n['customerId'])
-        n['productId'] = int(n['productId'])
         n['date'] = n['year'] + '-' + n['month'] + '-' + n['day']
         upsert_order(n)
         return redirect("/order/", code=302)    
@@ -112,10 +110,10 @@ def order_new():
 @app.route('/order/delete/<id>', methods=['GET', 'POST'])
 def order_delete(id):
     if request.method == 'GET':
-        order = get_order(int(id))
+        order = get_order(id)
         return render_template('orders/delete.html', order=order)
     else:
-        delete_order(int(id))
+        delete_order(id)
         return redirect("/order/", code=302)    
 #########################################################################
 

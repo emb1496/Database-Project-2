@@ -105,21 +105,29 @@ def upsert_product(product):
 
 def delete_product(id):
 	products.delete_one({'_id':ObjectId(id)})
-	
+
 def get_orders():
-    for order in orders:
-        order['product'] = _find_by_id(products, order['productId'])
-        order['customer'] = _find_by_id(customers, order['customerId'])
-    return orders
+	allOrders = orders.find({})
+	for order in allOrders:
+		customer = get_customer(order['customerId'])
+		order['customer'] = dict()
+		order['customer']['firstName'] = customer['firstName']
+		order['customer']['lastName'] = customer['lastName']
+		product = get_product(order['productId'])
+		order['product'] = dict()
+		order['product']['name'] = product['name']
+		order['id'] = str(order['_id'])
+		yield order
 
 def get_order(id):
-    return _find_by_id(orders, id)
+	order = orders.find_one({'_id':ObjectId(id)})
+	return order
 
 def upsert_order(order):
-    _upsert_by_id(orders, order)
+	orders.insert_one(order)
 
 def delete_order(id):
-    _delete_by_id(orders, id)
+	orders.delete_one({'_id':ObjectId(id)})
 
 # Return the customer, with a list of orders.  Each order should have a product 
 # property as well.
