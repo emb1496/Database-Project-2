@@ -3,6 +3,9 @@ import pymongo
 from pymongo import MongoClient
 import configparser
 from bson import ObjectId
+#abstraction for redis functionality
+from .redisDB import *
+
 ################################################################################
 #  REMOVE THESE LISTS, THEY ARE HERE AS MOCK DATA ONLY.
 #customers = list()
@@ -123,6 +126,11 @@ def get_order(id):
 	order = orders.find_one({'_id':ObjectId(id)})
 	return order
 
+def _get_order_productId(productId):
+    product_orders = orders.find({'productId': productId})
+    for order in product_orders:
+        yield order
+
 def upsert_order(order):
 	orders.insert_one(order)
 
@@ -147,9 +155,20 @@ def customer_report(id):
 def sales_report():
     products = get_products()
     for product in products:
-        orders = [o for o in get_orders() if o['productId'] == product['id']] 
-        orders = sorted(orders, key=lambda k: k['date']) 
-        product['last_order_date'] = orders[-1]['date']
-        product['total_sales'] = len(orders)
-        product['gross_revenue'] = product['price'] * product['total_sales']
-    return products
+        cached_product_data = check_product(product)
+        if cached_product_data == None:
+            product_orders = _get_order_productId(product['id'])
+            orders = sorted(product_orders, key=lambda k: k['date'])
+
+            product_order = dict()
+            product_order['name'] = product['name']
+            product_order['last_order_date'] = orders[-1]['date']
+            product_order['total_sales'] = len(orders)
+            product_order['gross_revenue'] = product['price'] * product_order['total_sales']
+
+            load_product(product_order,product['id'])
+            yield product_order
+
+        else:
+            yield deserialize_json(cached_product_data)
+

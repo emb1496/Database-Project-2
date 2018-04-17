@@ -8,11 +8,13 @@ def initlize_connection():
     conn = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 '''
-  Searches for products within the cache,
+  Paramas: product -> current product being checked.
+  Description: Searches for products within the cache,
   if not found then it is added to the cache.
 '''
-def get_product(product):
+def check_product(product):
     global conn
+    print(product)
     if conn.exists(product['id']):
         return conn.get(product['id'])
 
@@ -22,23 +24,11 @@ def get_product(product):
   Loads product data into the redis cache if it is not already
   within the DB.
 '''
-def load_product(productName, productId, numSales, price, date):
+def load_product(new_product, productId):
     global conn
-    name = productName
-    numSales = numSales
-    product_price = price
-    recent_order_date = date
+    #using json in order to keep data standardized and avoid nasty lookup situations.
+    val = json.dumps(new_product)
+    conn.set(productId, val)
 
-    order = {
-        "productName" : name,
-        "numSales" : numSales,
-        "price" : product_price,
-        "recentDate" : recent_order_date
-    }
-    #using json in order to keep data standardized.
-    val = json.dumps(order)
-    conn.set(productId,val)
-
-initlize_connection()
-
-load_product("pop", 1, 2, 200, "asdasdasd")
+def deserialize_json(json_string):
+    return json.loads(json_string)
