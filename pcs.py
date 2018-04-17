@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request, redirect
 from .database import *
+from .redisDB import *
+
 app = Flask(__name__)
 
+#connect to our mongodb instance.
 initialize()
+#connect to our redis DB
+initlize_connection()
 
 @app.route('/')
 def index():
@@ -121,5 +126,6 @@ def order_delete(id):
 @app.route('/reports/product', methods=['GET'])
 def get_sales_report():
     products = sales_report()
+
     return render_template('sales.html',products=products)
 #########################################################################

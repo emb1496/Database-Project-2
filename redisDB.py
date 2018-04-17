@@ -14,7 +14,6 @@ def initlize_connection():
 '''
 def check_product(product):
     global conn
-    print(product)
     if conn.exists(product['id']):
         return conn.get(product['id'])
 

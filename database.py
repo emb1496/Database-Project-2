@@ -156,10 +156,10 @@ def sales_report():
     products = get_products()
     for product in products:
         cached_product_data = check_product(product)
+        # add checking for new data to update the cache
         if cached_product_data == None:
-            product_orders = _get_order_productId(product['id'])
+            product_orders = _get_order_productId(product['id']) 
             orders = sorted(product_orders, key=lambda k: k['date'])
-
             product_order = dict()
             product_order['name'] = product['name']
             product_order['last_order_date'] = orders[-1]['date']
