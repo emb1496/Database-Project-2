@@ -89,17 +89,20 @@ def delete_product(id):
 	products.delete_one({'_id':ObjectId(id)})
 
 def get_orders():
-	allOrders = orders.find({})
-	for order in allOrders:
-		customer = get_customer(order['customerId'])
-		order['customer'] = dict()
-		order['customer']['firstName'] = customer['firstName']
-		order['customer']['lastName'] = customer['lastName']
-		product = get_product(order['productId'])
-		order['product'] = dict()
-		order['product']['name'] = product['name']
-		order['id'] = str(order['_id'])
-		yield order
+    allOrders = orders.find({})
+    for order in allOrders:
+        customer = get_customer(order['customerId'])
+        order['customer'] = dict()
+        order['customer']['firstName'] = customer['firstName']
+        order['customer']['lastName'] = customer['lastName']
+
+        product = get_product(order['productId'])
+        if product != None:
+            order['product'] = dict()
+            order['product']['name'] = product['name']
+            order['id'] = str(order['_id'])
+
+            yield order
 
 def get_order(id):
 	order = orders.find_one({'_id':ObjectId(id)})
@@ -114,16 +117,11 @@ def upsert_order(order):
     orders.insert_one(order)
     cached_product_orders = check_product(order['productId'])
     if cached_product_orders != None:
-        product = get_product(order['productId'])
-        print(product)
-        cache = deserialize_json(cached_product_orders)
-        cache['total_sales'] += 1
-        cache['gross_revenue'] += product['price']
-        load_product(cache, order['productId'])
+        delete_product_cache(order['productId'])
 
 def delete_order(id):
 	orders.delete_one({'_id':ObjectId(id)})
-
+    
 # Return the customer, with a list of orders.  Each order should have a product 
 # property as well.
 def customer_report(id):

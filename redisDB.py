@@ -38,6 +38,8 @@ def load_product(new_product, productId):
     val = json.dumps(new_product)
     conn.set(productId, val)
 
+def delete_product_cache(productId):
+    conn.delete(productId)
 '''
  When json is stored within the redis cache, we need to deserialize
  data back into a json object when using the data.
