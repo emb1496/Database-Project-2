@@ -6,30 +6,9 @@ from bson import ObjectId
 #abstraction for redis functionality
 from .redisDB import *
 
-################################################################################
-#  REMOVE THESE LISTS, THEY ARE HERE AS MOCK DATA ONLY.
-#customers = list()
-#customers.append({'id': 0, 'firstName': "Kasandra", 'lastName': "Cryer", 'street':"884 Meadow Lane", 'city':"Bardstown", 'state':"KY", 'zip':  "4004"})
-#customers.append({'id': 1, 'firstName': "Ferne", 'lastName': "Linebarger", 'street':"172 Academy Street", 'city':"Morton Grove", 'state':"IL", 'zip':  "60053"})
-#customers.append({'id': 2, 'firstName': "Britany", 'lastName': "Manges", 'street':"144 Fawn Court", 'city':"Antioch", 'state':"TN", 'zip':  "37013"})
-
-#products = list()
-#products.append({'id':0, 'name': "Product A", 'price': 5})
-#products.append({'id':1, 'name': "Product B", 'price': 10})
-#products.append({'id':2, 'name': "Product C", 'price': 2.5})
-
-#orders = list()
-#orders.append({'id':0, 'customerId': 0, 'productId':0, 'date':"2017-04-12"})
-#orders.append({'id':1, 'customerId': 2, 'productId':1, 'date':"2015-08-13"})
-#orders.append({'id':2, 'customerId': 0, 'productId':2, 'date':"2019-10-18"})
-#orders.append({'id':3, 'customerId': 1, 'productId':0, 'date':"2011-03-30"})
-#orders.append({'id':4, 'customerId': 0, 'productId':1, 'date':"2017-09-01"})
-#orders.append({'id':5, 'customerId': 1, 'productId':2, 'date':"2017-12-17"})
-
 products = None
 customers = None
 orders = None
-    
 
 ################################################################################
 # The following three functions are only for mocking data - they should be removed,
@@ -132,7 +111,15 @@ def _get_order_productId(productId):
         yield order
 
 def upsert_order(order):
-	orders.insert_one(order)
+    orders.insert_one(order)
+    cached_product_orders = check_product(order['productId'])
+    if cached_product_orders != None:
+        product = get_product(order['productId'])
+        print(product)
+        cache = deserialize_json(cached_product_orders)
+        cache['total_sales'] += 1
+        cache['gross_revenue'] += product['price']
+        load_product(cache, order['productId'])
 
 def delete_order(id):
 	orders.delete_one({'_id':ObjectId(id)})
@@ -155,7 +142,7 @@ def customer_report(id):
 def sales_report():
     products = get_products()
     for product in products:
-        cached_product_data = check_product(product)
+        cached_product_data = check_product(product['id'])
         # add checking for new data to update the cache
         if cached_product_data == None:
             product_orders = _get_order_productId(product['id']) 
@@ -167,6 +154,7 @@ def sales_report():
             product_order['gross_revenue'] = product['price'] * product_order['total_sales']
 
             load_product(product_order,product['id'])
+
             yield product_order
 
         else:
