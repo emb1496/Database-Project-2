@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from .database import *
-from .redisDB import *
+from .redis_db import *
 
 app = Flask(__name__)
 

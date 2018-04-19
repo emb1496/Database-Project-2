@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import configparser
 from bson import ObjectId
 #abstraction for redis functionality
-from .redisDB import *
+from .redis_db import *
 
 products = None
 customers = None
@@ -92,17 +92,18 @@ def get_orders():
     allOrders = orders.find({})
     for order in allOrders:
         customer = get_customer(order['customerId'])
-        order['customer'] = dict()
-        order['customer']['firstName'] = customer['firstName']
-        order['customer']['lastName'] = customer['lastName']
+        if customer != None:
+            order['customer'] = dict()
+            order['customer']['firstName'] = customer['firstName']
+            order['customer']['lastName'] = customer['lastName']
 
-        product = get_product(order['productId'])
-        if product != None:
-            order['product'] = dict()
-            order['product']['name'] = product['name']
-            order['id'] = str(order['_id'])
+            product = get_product(order['productId'])
+            if product != None:
+                order['product'] = dict()
+                order['product']['name'] = product['name']
+                order['id'] = str(order['_id'])
 
-            yield order
+                yield order
 
 def get_order(id):
 	order = orders.find_one({'_id':ObjectId(id)})
@@ -120,14 +121,21 @@ def upsert_order(order):
         delete_product_cache(order['productId'])
 
 def delete_order(id):
-	orders.delete_one({'_id':ObjectId(id)})
-    
+    #find the order that we are deleting in order to query for
+    # the order in order to delete the cache relating to the product.
+    order = orders.find_one({"_id" : ObjectId(id)})
+    # delete the order
+    orders.delete_one({'_id':ObjectId(id)})
+    #delete the cache
+    delete_product_cache(order['productId'])
+
 # Return the customer, with a list of orders.  Each order should have a product 
 # property as well.
 def customer_report(id):
     customer = _find_by_id(customers, id)
     orders = get_orders()
     customer['orders'] = [o for o in orders if o['customerId'] == id]
+
     return customer
 
 # Pay close attention to what is being returned here.  Each product in the products
