@@ -61,4 +61,4 @@ def delete_product_cache(product_id):
  data back into a json object when using the data.
 '''
 def deserialize_json(json_string):
-    return json.loads(json_string)
+    return json.loads(json_string.decode('utf-8'))

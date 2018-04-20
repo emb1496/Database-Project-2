@@ -80,13 +80,16 @@ def get_product(id):
 	return product
 
 def upsert_product(product):
-	if 'id' not in product.keys():
-		products.insert_one(product)
-	else:
-		products.update_one({'_id':ObjectId(product['id'])}, {'$set':{'name':product['name'],'price':product['price']}})
-
+    if 'id' not in product.keys():
+        products.insert_one(product)
+    else:
+        products.update_one({'_id':ObjectId(product['id'])}, {'$set':{'name':product['name'],'price':product['price']}})
+        # if a product is updated, then we need to delete it from the cache do data can be updated as well.
+        delete_product_cache(product['id'])
 def delete_product(id):
-	products.delete_one({'_id':ObjectId(id)})
+    products.delete_one({'_id':ObjectId(id)})
+    #if a product gets deleted, then delete the cache as well.
+    delete_product_cache(id)
 
 def get_orders():
     allOrders = orders.find({})
@@ -151,17 +154,20 @@ def sales_report():
         cached_product_data = check_product(product['id'])
         # add checking for new data to update the cache
         if cached_product_data == None:
-            product_orders = _get_order_productId(product['id']) 
-            orders = sorted(product_orders, key=lambda k: k['date'])
-            product_order = dict()
-            product_order['name'] = product['name']
-            product_order['last_order_date'] = orders[-1]['date']
-            product_order['total_sales'] = len(orders)
-            product_order['gross_revenue'] = product['price'] * product_order['total_sales']
+            product_orders = list(_get_order_productId(product['id']))
+            #need to make sure that there are orders for the product
+            if len(product_orders) > 0:
+                print(product_orders)
+                orders = sorted(product_orders, key=lambda k: k['date'])
+                product_order = dict()
+                product_order['name'] = product['name']
+                product_order['last_order_date'] = orders[-1]['date']
+                product_order['total_sales'] = len(orders)
+                product_order['gross_revenue'] = product['price'] * product_order['total_sales']
 
-            load_product(product_order,product['id'])
+                load_product(product_order,product['id'])
 
-            yield product_order
+                yield product_order
 
         else:
             yield deserialize_json(cached_product_data)
